@@ -12,12 +12,12 @@ enum Pieces {
     BlueBishop = -3,
     BluePawn = -1,
     Empty = 0,
-    RedPawn = 1,
-    RedBishop = 3,
-    RedKnight = 4,
-    RedRook = 5,
-    RedQueen = 9,
-    RedKing = 100,
+    GreenPawn = 1,
+    GreenBishop = 3,
+    GreenKnight = 4,
+    GreenRook = 5,
+    GreenQueen = 9,
+    GreenKing = 100,
 }
 // For turning our enum of the piece into a string slice for printing
 impl Pieces {
@@ -30,12 +30,12 @@ impl Pieces {
             (Pieces::BlueBishop, "󰡜 "),
             (Pieces::BluePawn, "󰡙 "),
             (Pieces::Empty, "  "),
-            (Pieces::RedPawn, "󰡙 "),
-            (Pieces::RedBishop, "󰡜 "),
-            (Pieces::RedKnight, "󰡘 "),
-            (Pieces::RedRook, "󰡛 "),
-            (Pieces::RedQueen, "󰡚 "),
-            (Pieces::RedKing, "󰡗 "),
+            (Pieces::GreenPawn, "󰡙 "),
+            (Pieces::GreenBishop, "󰡜 "),
+            (Pieces::GreenKnight, "󰡘 "),
+            (Pieces::GreenRook, "󰡛 "),
+            (Pieces::GreenQueen, "󰡚 "),
+            (Pieces::GreenKing, "󰡗 "),
         ]
         .into_iter()
         .collect();
@@ -56,24 +56,24 @@ fn main() {
     // and blue is white
     const START_STATE: [[Pieces; 8]; 8] = [
         [ // First Row
-            Pieces::RedRook,
-            Pieces::RedKnight,
-            Pieces::RedBishop,
-            Pieces::RedQueen,
-            Pieces::RedKing,
-            Pieces::RedBishop,
-            Pieces::RedKnight,
-            Pieces::RedRook,
+            Pieces::GreenRook,
+            Pieces::GreenKnight,
+            Pieces::GreenBishop,
+            Pieces::GreenQueen,
+            Pieces::GreenKing,
+            Pieces::GreenBishop,
+            Pieces::GreenKnight,
+            Pieces::GreenRook,
         ],
         [ // Second Row
-            Pieces::RedPawn,
-            Pieces::RedPawn,
-            Pieces::RedPawn,
-            Pieces::RedPawn,
-            Pieces::RedPawn,
-            Pieces::RedPawn,
-            Pieces::RedPawn,
-            Pieces::RedPawn,
+            Pieces::GreenPawn,
+            Pieces::GreenPawn,
+            Pieces::GreenPawn,
+            Pieces::GreenPawn,
+            Pieces::GreenPawn,
+            Pieces::GreenPawn,
+            Pieces::GreenPawn,
+            Pieces::GreenPawn,
         ],
         [ // Third Row
             Pieces::Empty,
@@ -163,8 +163,8 @@ fn print_board(state: &[[Pieces; 8]; 8]) {
         for column in row.into_iter().enumerate() {
             let (_, cell) = column;
             let piece = Pieces::get_piece(&cell);
-            if cell > &Pieces::Empty { // then red team
-                color_spec.set_fg(Some(Color::Red));
+            if cell > &Pieces::Empty { // then green team
+                color_spec.set_fg(Some(Color::Green));
                 stdout.set_color(&color_spec).expect("Failed to set color");
                 write!(&mut stdout, " {} ", piece).expect("Failed to write");
                 stdout.reset().expect("Failed to reset color");
