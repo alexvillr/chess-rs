@@ -1,41 +1,43 @@
 use std::collections::HashMap;
+use std::io::Write;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+// Enum for storing the different piece types
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum Pieces {
-    WhiteKing = -100,
-    WhiteQueen = -9,
-    WhiteRook = -5,
-    WhiteKnight = -4,
-    WhiteBishop = -3,
-    WhitePawn = -1,
+    BlueKing = -100,
+    BlueQueen = -9,
+    BlueRook = -5,
+    BlueKnight = -4,
+    BlueBishop = -3,
+    BluePawn = -1,
     Empty = 0,
-    BlackPawn = 1,
-    BlackBishop = 3,
-    BlackKnight = 4,
-    BlackRook = 5,
-    BlackQueen = 9,
-    BlackKing = 100,
+    RedPawn = 1,
+    RedBishop = 3,
+    RedKnight = 4,
+    RedRook = 5,
+    RedQueen = 9,
+    RedKing = 100,
 }
-
+// For turning our enum of the piece into a string slice for printing
 impl Pieces {
     fn get_piece(piece: &Pieces) -> &str {
         let pieces_map: HashMap<Pieces, &str> = [
-            (Pieces::WhiteKing, "󰡗 "),
-            (Pieces::WhiteQueen, "󰡚 "),
-            (Pieces::WhiteRook, "󰡛 "),
-            (Pieces::WhiteKnight, "󰡘 "),
-            (Pieces::WhiteBishop, "󰡜 "),
-            (Pieces::WhitePawn, "󰡙 "),
+            (Pieces::BlueKing, "󰡗 "),
+            (Pieces::BlueQueen, "󰡚 "),
+            (Pieces::BlueRook, "󰡛 "),
+            (Pieces::BlueKnight, "󰡘 "),
+            (Pieces::BlueBishop, "󰡜 "),
+            (Pieces::BluePawn, "󰡙 "),
             (Pieces::Empty, "  "),
-            (Pieces::BlackPawn, "󰡙 "),
-            (Pieces::BlackBishop, "󰡜 "),
-            (Pieces::BlackKnight, "󰡘 "),
-            (Pieces::BlackRook, "󰡛 "),
-            (Pieces::BlackQueen, "󰡚 "),
-            (Pieces::BlackKing, "󰡗 "),
+            (Pieces::RedPawn, "󰡙 "),
+            (Pieces::RedBishop, "󰡜 "),
+            (Pieces::RedKnight, "󰡘 "),
+            (Pieces::RedRook, "󰡛 "),
+            (Pieces::RedQueen, "󰡚 "),
+            (Pieces::RedKing, "󰡗 "),
         ]
-        .iter()
-        .cloned()
+        .into_iter()
         .collect();
         let piece_str = pieces_map.get(piece).copied();
         match piece_str {
@@ -45,24 +47,112 @@ impl Pieces {
     }
 }
 
+/* main()
+ * ------
+ * The main method. All functions are called inside of this method
+*/
 fn main() {
-
-
+    // A standard set up for the first version of a board. Note red is black
+    // and blue is white
     const START_STATE: [[Pieces; 8]; 8] = [
-        [Pieces::BlackRook, Pieces::BlackKnight, Pieces::BlackBishop, Pieces::BlackQueen, Pieces::BlackKing, Pieces::BlackBishop, Pieces::BlackKnight, Pieces::BlackRook],
-        [Pieces::BlackPawn, Pieces::BlackPawn, Pieces::BlackPawn, Pieces::BlackPawn, Pieces::BlackPawn, Pieces::BlackPawn, Pieces::BlackPawn, Pieces::BlackPawn],
-        [Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty],
-        [Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty],
-        [Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty],
-        [Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty, Pieces::Empty],
-        [Pieces::WhitePawn, Pieces::WhitePawn, Pieces::WhitePawn, Pieces::WhitePawn, Pieces::WhitePawn, Pieces::WhitePawn, Pieces::WhitePawn, Pieces::WhitePawn],
-        [Pieces::WhiteRook, Pieces::WhiteKnight, Pieces::WhiteBishop, Pieces::WhiteKing, Pieces::WhiteQueen, Pieces::WhiteBishop, Pieces::WhiteKnight, Pieces::WhiteRook],
+        [ // First Row
+            Pieces::RedRook,
+            Pieces::RedKnight,
+            Pieces::RedBishop,
+            Pieces::RedQueen,
+            Pieces::RedKing,
+            Pieces::RedBishop,
+            Pieces::RedKnight,
+            Pieces::RedRook,
+        ],
+        [ // Second Row
+            Pieces::RedPawn,
+            Pieces::RedPawn,
+            Pieces::RedPawn,
+            Pieces::RedPawn,
+            Pieces::RedPawn,
+            Pieces::RedPawn,
+            Pieces::RedPawn,
+            Pieces::RedPawn,
+        ],
+        [ // Third Row
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+        ],
+        [ // Fourth Row
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+        ],
+        [ // Fifth Row
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+        ],
+        [ // Sixth Row
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+            Pieces::Empty,
+        ],
+        [ // Seventh Row
+            Pieces::BluePawn,
+            Pieces::BluePawn,
+            Pieces::BluePawn,
+            Pieces::BluePawn,
+            Pieces::BluePawn,
+            Pieces::BluePawn,
+            Pieces::BluePawn,
+            Pieces::BluePawn,
+        ],
+        [ // Eigth Row
+            Pieces::BlueRook,
+            Pieces::BlueKnight,
+            Pieces::BlueBishop,
+            Pieces::BlueKing,
+            Pieces::BlueQueen,
+            Pieces::BlueBishop,
+            Pieces::BlueKnight,
+            Pieces::BlueRook,
+        ],
     ];
-
     print_board(&START_STATE);
 }
 
+/* print_board()
+ * -------------
+ * prints the board given a current state. Doesn't do much else but does handle
+ * the changing of colours for the output so that the pieces are proper colours
+ *
+ * state: The current state of the board. A 2d array of Pieces to be iterated
+ *          over
+*/
 fn print_board(state: &[[Pieces; 8]; 8]) {
+    // initialises a stdout stream as well as a colorspec.
+    let mut stdout = StandardStream::stdout(ColorChoice::Always);
+    let mut color_spec = ColorSpec::new();
+
+    println!("  A    B    C    D    E    F    G    H");
     println!("╭────┬────┬────┬────┬────┬────┬────┬────╮");
     for i in state.into_iter().enumerate() {
         let (rownum, row) = i;
@@ -73,11 +163,22 @@ fn print_board(state: &[[Pieces; 8]; 8]) {
         for column in row.into_iter().enumerate() {
             let (_, cell) = column;
             let piece = Pieces::get_piece(&cell);
-            print!(" {} ", piece);
+            if cell > &Pieces::Empty { // then red team
+                color_spec.set_fg(Some(Color::Red));
+                stdout.set_color(&color_spec).expect("Failed to set color");
+                write!(&mut stdout, " {} ", piece).expect("Failed to write");
+                stdout.reset().expect("Failed to reset color");
+            } else if cell < &Pieces::Empty { // then blue team
+                color_spec.set_fg(Some(Color::Blue));
+                stdout.set_color(&color_spec).expect("Failed to set color");
+                write!(&mut stdout, " {} ", piece).expect("Failed to write");
+                stdout.reset().expect("Failed to reset color");
+            } else {
+                print!(" {} ", piece);
+            }
             print!("│");
         }
-        println!();
+        println!(" {}", rownum + 1);
     }
     println!("╰────┴────┴────┴────┴────┴────┴────┴────╯");
 }
-
