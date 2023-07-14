@@ -1,142 +1,255 @@
 use std::collections::HashMap;
 use std::io::Write;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use termcolor::{ Color, ColorChoice, ColorSpec, StandardStream, WriteColor };
+
+#[derive(PartialEq, Eq, Clone)]
+enum Alliance {
+    Blue,
+    Green,
+    Empty,
+}
 
 // Enum for storing the different piece types
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 enum Pieces {
-    BlueKing = -100,
-    BlueQueen = -9,
-    BlueRook = -5,
-    BlueKnight = -4,
-    BlueBishop = -3,
-    BluePawn = -1,
-    Empty = 0,
-    GreenPawn = 1,
-    GreenBishop = 3,
-    GreenKnight = 4,
-    GreenRook = 5,
-    GreenQueen = 9,
-    GreenKing = 100,
+    King,
+    Queen,
+    Rook,
+    Knight,
+    Bishop,
+    Pawn,
+    Empty,
 }
 // For turning our enum of the piece into a string slice for printing
 impl Pieces {
     fn get_piece(piece: &Pieces) -> &str {
         let pieces_map: HashMap<Pieces, &str> = [
-            (Pieces::BlueKing, "󰡗 "),
-            (Pieces::BlueQueen, "󰡚 "),
-            (Pieces::BlueRook, "󰡛 "),
-            (Pieces::BlueKnight, "󰡘 "),
-            (Pieces::BlueBishop, "󰡜 "),
-            (Pieces::BluePawn, "󰡙 "),
+            (Pieces::King, "󰡗 "),
+            (Pieces::Queen, "󰡚 "),
+            (Pieces::Rook, "󰡛 "),
+            (Pieces::Knight, "󰡘 "),
+            (Pieces::Bishop, "󰡜 "),
+            (Pieces::Pawn, "󰡙 "),
             (Pieces::Empty, "  "),
-            (Pieces::GreenPawn, "󰡙 "),
-            (Pieces::GreenBishop, "󰡜 "),
-            (Pieces::GreenKnight, "󰡘 "),
-            (Pieces::GreenRook, "󰡛 "),
-            (Pieces::GreenQueen, "󰡚 "),
-            (Pieces::GreenKing, "󰡗 "),
         ]
-        .into_iter()
-        .collect();
+            .into_iter()
+            .collect();
         let piece_str = pieces_map.get(piece).copied();
         match piece_str {
-            Some(v) => return v,
-            None => return "Error",
+            Some(v) => {
+                return v;
+            }
+            None => {
+                return "Error";
+            }
         }
     }
+}
+
+#[derive(Clone)]
+struct Player {
+    colour: Alliance,
+    score: i128,
+}
+
+#[derive(Clone)]
+struct Piece {
+    kind: Pieces,
+    player: Player,
 }
 
 /* main()
  * ------
  * The main method. All functions are called inside of this method
-*/
+ */
 fn main() {
-    // A standard set up for the first version of a board. Note red is black
+    // A standard set up for the first version of a board. Note green is black
     // and blue is white
-    const START_STATE: [[Pieces; 8]; 8] = [
-        [ // First Row
-            Pieces::GreenRook,
-            Pieces::GreenKnight,
-            Pieces::GreenBishop,
-            Pieces::GreenQueen,
-            Pieces::GreenKing,
-            Pieces::GreenBishop,
-            Pieces::GreenKnight,
-            Pieces::GreenRook,
+    const GREEN_TEAM: Player = Player {
+        colour: Alliance::Green,
+        score: 0,
+    };
+    const BLUE_TEAM: Player = Player {
+        colour: Alliance::Blue,
+        score: 0,
+    };
+    const NO_TEAM: Player = Player {
+        colour: Alliance::Empty,
+        score: -1,
+    };
+    const TEAMS: [Player; 3] = [GREEN_TEAM, BLUE_TEAM, NO_TEAM];
+    let mut state: [[Piece; 8]; 8] = reset_board(TEAMS);
+    print_board(&state);
+    let mut game_over: bool = false;
+    let mut blues_turn: bool = true;
+    let mut player: Player = TEAMS[0].clone();
+    while !game_over {
+        game_over = move_available(&state, player);
+
+        // state = make_move(get_player_move());
+
+        blues_turn = !blues_turn;
+        if blues_turn {
+            player = TEAMS[Alliance::Blue as usize].clone();
+        } else {
+            player = TEAMS[Alliance::Green as usize].clone();
+        }
+    }
+}
+
+fn reset_board(teams: [Player; 3]) -> [[Piece; 8]; 8] {
+    let empty: Piece = Piece {
+        kind: Pieces::Empty,
+        player: teams[Alliance::Empty as usize].clone(),
+    };
+    let mut board: [[Piece; 8]; 8] = [
+        /*
+        A bit hacky but unsure of another way to work it.
+        Maybe there is a way to loop over uninitialized array?
+        TODO.
+        */
+        [
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
         ],
-        [ // Second Row
-            Pieces::GreenPawn,
-            Pieces::GreenPawn,
-            Pieces::GreenPawn,
-            Pieces::GreenPawn,
-            Pieces::GreenPawn,
-            Pieces::GreenPawn,
-            Pieces::GreenPawn,
-            Pieces::GreenPawn,
+        [
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
         ],
-        [ // Third Row
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
+        [
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
         ],
-        [ // Fourth Row
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
+        [
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
         ],
-        [ // Fifth Row
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
+        [
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
         ],
-        [ // Sixth Row
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
-            Pieces::Empty,
+        [
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
         ],
-        [ // Seventh Row
-            Pieces::BluePawn,
-            Pieces::BluePawn,
-            Pieces::BluePawn,
-            Pieces::BluePawn,
-            Pieces::BluePawn,
-            Pieces::BluePawn,
-            Pieces::BluePawn,
-            Pieces::BluePawn,
+        [
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
         ],
-        [ // Eigth Row
-            Pieces::BlueRook,
-            Pieces::BlueKnight,
-            Pieces::BlueBishop,
-            Pieces::BlueKing,
-            Pieces::BlueQueen,
-            Pieces::BlueBishop,
-            Pieces::BlueKnight,
-            Pieces::BlueRook,
+        [
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
+            empty.clone(),
         ],
     ];
-    print_board(&START_STATE);
+    let mut king_row: usize;
+    let mut pawn_row: usize;
+    for team_tuple in teams.into_iter().enumerate() {
+        let (_, team) = team_tuple;
+        if team.colour == Alliance::Blue {
+            king_row = 7;
+            pawn_row = 6;
+            board[king_row][4] = Piece {
+                kind: Pieces::King,
+                player: team.clone(),
+            };
+            board[king_row][3] = Piece {
+                kind: Pieces::Queen,
+                player: team.clone(),
+            };
+        } else if team.colour == Alliance::Green {
+            king_row = 0;
+            pawn_row = 1;
+            board[king_row][3] = Piece {
+                kind: Pieces::King,
+                player: team.clone(),
+            };
+            board[king_row][4] = Piece {
+                kind: Pieces::Queen,
+                player: team.clone(),
+            };
+        } else {
+            continue;
+        }
+        for column in 0..8 {
+            board[pawn_row][column] = Piece {
+                kind: Pieces::Pawn,
+                player: team.clone(),
+            };
+        }
+        board[king_row][0] = Piece {
+            kind: Pieces::Rook,
+            player: team.clone(),
+        };
+        board[king_row][7] = Piece {
+            kind: Pieces::Rook,
+            player: team.clone(),
+        };
+        board[king_row][1] = Piece {
+            kind: Pieces::Knight,
+            player: team.clone(),
+        };
+        board[king_row][6] = Piece {
+            kind: Pieces::Knight,
+            player: team.clone(),
+        };
+        board[king_row][2] = Piece {
+            kind: Pieces::Bishop,
+            player: team.clone(),
+        };
+        board[king_row][5] = Piece {
+            kind: Pieces::Bishop,
+            player: team.clone(),
+        };
+    }
+    return board;
 }
 
 /* print_board()
@@ -146,11 +259,11 @@ fn main() {
  *
  * state: The current state of the board. A 2d array of Pieces to be iterated
  *          over
-*/
-fn print_board(state: &[[Pieces; 8]; 8]) {
+ */
+fn print_board(state: &[[Piece; 8]; 8]) {
     // initialises a stdout stream as well as a colorspec.
-    let mut stdout = StandardStream::stdout(ColorChoice::Always);
-    let mut color_spec = ColorSpec::new();
+    let mut stdout: StandardStream = StandardStream::stdout(ColorChoice::Always);
+    let mut color_spec: ColorSpec = ColorSpec::new();
 
     println!("  A    B    C    D    E    F    G    H");
     println!("╭────┬────┬────┬────┬────┬────┬────┬────╮");
@@ -162,23 +275,32 @@ fn print_board(state: &[[Pieces; 8]; 8]) {
         print!("│");
         for column in row.into_iter().enumerate() {
             let (_, cell) = column;
-            let piece = Pieces::get_piece(&cell);
-            if cell > &Pieces::Empty { // then green team
+            let piece = Pieces::get_piece(&cell.kind);
+            if cell.player.colour == Alliance::Green {
+                // then green team
                 color_spec.set_fg(Some(Color::Green));
                 stdout.set_color(&color_spec).expect("Failed to set color");
                 write!(&mut stdout, " {} ", piece).expect("Failed to write");
-                stdout.reset().expect("Failed to reset color");
-            } else if cell < &Pieces::Empty { // then blue team
+            } else if cell.player.colour == Alliance::Blue {
+                // then blue team
                 color_spec.set_fg(Some(Color::Blue));
                 stdout.set_color(&color_spec).expect("Failed to set color");
                 write!(&mut stdout, " {} ", piece).expect("Failed to write");
-                stdout.reset().expect("Failed to reset color");
             } else {
                 print!(" {} ", piece);
             }
+            stdout.reset().expect("Failed to reset color");
             print!("│");
         }
         println!(" {}", rownum + 1);
     }
     println!("╰────┴────┴────┴────┴────┴────┴────┴────╯");
+}
+
+fn move_available(state: &[[Piece; 8]; 8], player: Player) -> bool {
+    return true;
+}
+
+fn make_move(location: &str, destination: &str, state: &[[Piece; 8]; 8]) -> [[Piece; 8]; 8] {
+    return state.clone();
 }
