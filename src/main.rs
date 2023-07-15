@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::io::Write;
-use termcolor::{ Color, ColorChoice, ColorSpec, StandardStream, WriteColor };
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 enum Alliance {
     Blue,
     Green,
@@ -10,7 +10,7 @@ enum Alliance {
 }
 
 // Enum for storing the different piece types
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum Pieces {
     King,
     Queen,
@@ -32,8 +32,8 @@ impl Pieces {
             (Pieces::Pawn, "󰡙 "),
             (Pieces::Empty, "  "),
         ]
-            .into_iter()
-            .collect();
+        .into_iter()
+        .collect();
         let piece_str = pieces_map.get(piece).copied();
         match piece_str {
             Some(v) => {
@@ -46,13 +46,13 @@ impl Pieces {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct Player {
     colour: Alliance,
     score: i128,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct Piece {
     kind: Pieces,
     player: Player,
@@ -102,97 +102,10 @@ fn reset_board(teams: [Player; 3]) -> [[Piece; 8]; 8] {
         kind: Pieces::Empty,
         player: teams[Alliance::Empty as usize].clone(),
     };
-    let mut board: [[Piece; 8]; 8] = [
-        /*
-        A bit hacky but unsure of another way to work it.
-        Maybe there is a way to loop over uninitialized array?
-        TODO.
-        */
-        [
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-        ],
-        [
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-        ],
-        [
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-        ],
-        [
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-        ],
-        [
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-        ],
-        [
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-        ],
-        [
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-        ],
-        [
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-            empty.clone(),
-        ],
-    ];
+    let mut board: [[Piece; 8]; 8] = [[empty.clone(); 8]; 8];
     let mut king_row: usize;
     let mut pawn_row: usize;
-    for team_tuple in teams.into_iter().enumerate() {
-        let (_, team) = team_tuple;
+    for team in teams.into_iter() {
         if team.colour == Alliance::Blue {
             king_row = 7;
             pawn_row = 6;
@@ -267,14 +180,12 @@ fn print_board(state: &[[Piece; 8]; 8]) {
 
     println!("  A    B    C    D    E    F    G    H");
     println!("╭────┬────┬────┬────┬────┬────┬────┬────╮");
-    for i in state.into_iter().enumerate() {
-        let (rownum, row) = i;
+    for (rownum, row) in state.into_iter().enumerate() {
         if rownum != 0 {
             println!("├────┼────┼────┼────┼────┼────┼────┼────┤");
         }
         print!("│");
-        for column in row.into_iter().enumerate() {
-            let (_, cell) = column;
+        for cell in row.into_iter() {
             let piece = Pieces::get_piece(&cell.kind);
             if cell.player.colour == Alliance::Green {
                 // then green team
